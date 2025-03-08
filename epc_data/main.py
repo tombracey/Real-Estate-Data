@@ -23,6 +23,7 @@ encoded_params = urlencode(query_params)
 
 full_url = f'{base_url}?{encoded_params}'
 
+
 with urllib.request.urlopen(urllib.request.Request(
     full_url, headers=headers)) as response:
     response_body = response.read()
