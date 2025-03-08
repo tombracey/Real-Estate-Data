@@ -7,6 +7,7 @@ PG_PASSWORD="1234"
 
 export PGPASSWORD=$PG_PASSWORD
 
+
 # Import address data
 
 psql -U postgres -d "$DB_NAME" -c "
@@ -21,7 +22,6 @@ CREATE TABLE temp_addressbase (
 echo "Importing CSV..."
 psql -U postgres -d "$DB_NAME" -c "\COPY temp_addressbase (UKPRN, latitude, longitude) FROM '$AB_CSV_PATH' DELIMITER ',' CSV HEADER;"
 
-# psql -U postgres -d "$DB_NAME" -c "SELECT * FROM temp_addressbase LIMIT 5;"
 
 # Import EPC data
 
@@ -42,20 +42,18 @@ CREATE TABLE temp_epc_data (
 echo "Importing epc_data.csv..."
 psql -U postgres -d "$DB_NAME" -c "\COPY temp_epc_data (LIGHTING_COST_CURRENT,LIGHTING_COST_POTENTIAL,HEATING_COST_CURRENT,HEATING_COST_POTENTIAL,HOT_WATER_COST_CURRENT,HOT_WATER_COST_POTENTIAL,ADDRESS,UPRN) FROM '$EPC_CSV_PATH' DELIMITER ',' CSV HEADER;"
 
-# psql -U postgres -d "$DB_NAME" -c "SELECT * FROM temp_epc_data LIMIT 5;"
 
-
-# Joining them
+# Joining and exporting
 
 psql -U postgres -d "$DB_NAME" -c "
 DROP TABLE IF EXISTS final_table;
 CREATE TABLE final_table AS
-SELECT a.UKPRN, a.latitude, a.longitude, e.LIGHTING_COST_CURRENT, e.LIGHTING_COST_POTENTIAL, e.HEATING_COST_CURRENT, e.HEATING_COST_POTENTIAL, e.HOT_WATER_COST_CURRENT, e.HOT_WATER_COST_POTENTIAL, e.ADDRESS
-FROM temp_addressbase a
-JOIN temp_epc_data e ON a.UKPRN = e.UPRN;
+SELECT UKPRN, latitude, longitude, temp_epc_data.LIGHTING_COST_CURRENT, temp_epc_data.LIGHTING_COST_POTENTIAL, temp_epc_data.HEATING_COST_CURRENT, temp_epc_data.HEATING_COST_POTENTIAL, temp_epc_data.HOT_WATER_COST_CURRENT, temp_epc_data.HOT_WATER_COST_POTENTIAL, temp_epc_data.ADDRESS
+FROM temp_addressbase
+JOIN temp_epc_data ON temp_addressbase.UKPRN = temp_epc_data.UPRN;
 "
 
-# psql -U postgres -d "$DB_NAME" -c "SELECT * FROM final_table LIMIT 5;"
+psql -U postgres -d "$DB_NAME" -c "\COPY final_result TO './data/final_result.csv' DELIMITER ',' CSV HEADER;"
 
 
 unset PGPASSWORD
