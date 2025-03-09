@@ -19,7 +19,7 @@ CREATE TABLE temp_addressbase (
 );
 "
 
-echo "Importing CSV..."
+echo "Importing addressbase data"
 psql -U postgres -d "$DB_NAME" -c "\COPY temp_addressbase (UKPRN, latitude, longitude) FROM '$AB_CSV_PATH' DELIMITER ',' CSV HEADER;"
 
 
@@ -39,7 +39,7 @@ CREATE TABLE temp_epc_data (
 );
 "
 
-echo "Importing epc_data.csv..."
+echo "Importing epc data"
 psql -U postgres -d "$DB_NAME" -c "\COPY temp_epc_data (LIGHTING_COST_CURRENT,LIGHTING_COST_POTENTIAL,HEATING_COST_CURRENT,HEATING_COST_POTENTIAL,HOT_WATER_COST_CURRENT,HOT_WATER_COST_POTENTIAL,ADDRESS,UPRN) FROM '$EPC_CSV_PATH' DELIMITER ',' CSV HEADER;"
 
 
