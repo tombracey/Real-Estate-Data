@@ -46,29 +46,20 @@ CREATE TABLE joined_table (
     UKPRN TEXT,
     latitude NUMERIC,
     longitude NUMERIC,
-    LIGHTING_COST_CURRENT NUMERIC,
-    LIGHTING_COST_POTENTIAL NUMERIC,
-    HEATING_COST_CURRENT NUMERIC,
-    HEATING_COST_POTENTIAL NUMERIC,
-    HOT_WATER_COST_CURRENT NUMERIC,
-    HOT_WATER_COST_POTENTIAL NUMERIC,
     ADDRESS TEXT,
-    CURRENT_ENERGY_RATING TEXT, 
-    TENURE TEXT                 
+    CURRENT_ENERGY_RATING TEXT,
+    potential_cost_savings NUMERIC
 );
-INSERT INTO joined_table (UKPRN, latitude, longitude, LIGHTING_COST_CURRENT, LIGHTING_COST_POTENTIAL, HEATING_COST_CURRENT, HEATING_COST_POTENTIAL, HOT_WATER_COST_CURRENT, HOT_WATER_COST_POTENTIAL, ADDRESS, CURRENT_ENERGY_RATING)
+INSERT INTO joined_table (UKPRN, latitude, longitude, ADDRESS, CURRENT_ENERGY_RATING, potential_cost_savings)
 SELECT 
     UKPRN, 
     latitude, 
     longitude, 
-    temp_epc_data.LIGHTING_COST_CURRENT, 
-    temp_epc_data.LIGHTING_COST_POTENTIAL, 
-    temp_epc_data.HEATING_COST_CURRENT, 
-    temp_epc_data.HEATING_COST_POTENTIAL, 
-    temp_epc_data.HOT_WATER_COST_CURRENT, 
-    temp_epc_data.HOT_WATER_COST_POTENTIAL, 
     temp_epc_data.ADDRESS,
-    temp_epc_data.CURRENT_ENERGY_RATING                
+    temp_epc_data.CURRENT_ENERGY_RATING,
+    (temp_epc_data.LIGHTING_COST_CURRENT - temp_epc_data.LIGHTING_COST_POTENTIAL) + 
+    (temp_epc_data.HEATING_COST_CURRENT - temp_epc_data.HEATING_COST_POTENTIAL) + 
+    (temp_epc_data.HOT_WATER_COST_CURRENT - temp_epc_data.HOT_WATER_COST_POTENTIAL) AS potential_cost_savings
 FROM temp_addressbase
 JOIN temp_epc_data ON temp_addressbase.UKPRN = temp_epc_data.UPRN
 WHERE temp_epc_data.TENURE LIKE 'rent%'
