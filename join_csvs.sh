@@ -31,18 +31,20 @@ CREATE TABLE temp_epc_data (
     HOT_WATER_COST_CURRENT NUMERIC,
     HOT_WATER_COST_POTENTIAL NUMERIC,
     ADDRESS TEXT,
-    UPRN TEXT
+    UPRN TEXT,
+    CURRENT_ENERGY_RATING TEXT,
+    TENURE TEXT
 );
 "
 
 echo "Importing epc data"
-psql -U postgres -d "$DB_NAME" -c "\COPY temp_epc_data (LIGHTING_COST_CURRENT,LIGHTING_COST_POTENTIAL,HEATING_COST_CURRENT,HEATING_COST_POTENTIAL,HOT_WATER_COST_CURRENT,HOT_WATER_COST_POTENTIAL,ADDRESS,UPRN) FROM '$EPC_CSV_PATH' DELIMITER ',' CSV HEADER;"
+psql -U postgres -d "$DB_NAME" -c "\COPY temp_epc_data (LIGHTING_COST_CURRENT, LIGHTING_COST_POTENTIAL, HEATING_COST_CURRENT, HEATING_COST_POTENTIAL, HOT_WATER_COST_CURRENT, HOT_WATER_COST_POTENTIAL, ADDRESS, UPRN, CURRENT_ENERGY_RATING, TENURE) FROM '$EPC_CSV_PATH' DELIMITER ',' CSV HEADER;"
 
-# Joining and exporting
+# Join tables, filter rental properties and save to joined_tables.csv
 psql -U postgres -d "$DB_NAME" -c "
-DROP TABLE IF EXISTS final_table;
-CREATE TABLE final_table (
-    id SERIAL PRIMARY KEY,  -- 🆕 Auto-incrementing ID
+DROP TABLE IF EXISTS joined_table;
+CREATE TABLE joined_table (
+    id SERIAL PRIMARY KEY,
     UKPRN TEXT,
     latitude NUMERIC,
     longitude NUMERIC,
@@ -52,9 +54,11 @@ CREATE TABLE final_table (
     HEATING_COST_POTENTIAL NUMERIC,
     HOT_WATER_COST_CURRENT NUMERIC,
     HOT_WATER_COST_POTENTIAL NUMERIC,
-    ADDRESS TEXT
+    ADDRESS TEXT,
+    CURRENT_ENERGY_RATING TEXT, 
+    TENURE TEXT                 
 );
-INSERT INTO final_table (UKPRN, latitude, longitude, LIGHTING_COST_CURRENT, LIGHTING_COST_POTENTIAL, HEATING_COST_CURRENT, HEATING_COST_POTENTIAL, HOT_WATER_COST_CURRENT, HOT_WATER_COST_POTENTIAL, ADDRESS)
+INSERT INTO joined_table (UKPRN, latitude, longitude, LIGHTING_COST_CURRENT, LIGHTING_COST_POTENTIAL, HEATING_COST_CURRENT, HEATING_COST_POTENTIAL, HOT_WATER_COST_CURRENT, HOT_WATER_COST_POTENTIAL, ADDRESS, CURRENT_ENERGY_RATING)
 SELECT 
     UKPRN, 
     latitude, 
@@ -65,14 +69,16 @@ SELECT
     temp_epc_data.HEATING_COST_POTENTIAL, 
     temp_epc_data.HOT_WATER_COST_CURRENT, 
     temp_epc_data.HOT_WATER_COST_POTENTIAL, 
-    temp_epc_data.ADDRESS
+    temp_epc_data.ADDRESS,
+    temp_epc_data.CURRENT_ENERGY_RATING                
 FROM temp_addressbase
-JOIN temp_epc_data ON temp_addressbase.UKPRN = temp_epc_data.UPRN;
+JOIN temp_epc_data ON temp_addressbase.UKPRN = temp_epc_data.UPRN
+WHERE temp_epc_data.TENURE LIKE 'rent%';
 "
 
-psql -U postgres -d "$DB_NAME" -c "\COPY final_table TO './data/joined_table.csv' DELIMITER ',' CSV HEADER;"
+psql -U postgres -d "$DB_NAME" -c "\COPY joined_table TO './data/joined_table.csv' DELIMITER ',' CSV HEADER;"
 
 unset PGPASSWORD
 
-# Remove duplicates
+# Remove duplicates and save to clean_data.csv
 awk -F',' '!seen[$1]++' ./data/joined_table.csv | awk -F',' '!seen[$2","$3]++' > ./data/clean_data.csv
