@@ -10,9 +10,9 @@ Ideas:
 
 To run bash script:
 - Replace the PG_PASSWORD variable on line 6 to your default 'postgres' user's password
-- Run `./join_csvs.sh`
+- Run `./query_csvs.sh`
 
 
-To run download_land_registry.py:
+To run download_land_registry_data.py:
 - `pip install requests`
 - `python download_land_registry.py`

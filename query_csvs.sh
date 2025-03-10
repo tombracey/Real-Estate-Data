@@ -17,7 +17,6 @@ CREATE TABLE temp_addressbase (
 );
 "
 
-echo "Importing addressbase data"
 psql -U postgres -d "$DB_NAME" -c "\COPY temp_addressbase (UKPRN, latitude, longitude) FROM '$AB_CSV_PATH' DELIMITER ',' CSV HEADER;"
 
 # Import EPC data
@@ -37,7 +36,6 @@ CREATE TABLE temp_epc_data (
 );
 "
 
-echo "Importing epc data"
 psql -U postgres -d "$DB_NAME" -c "\COPY temp_epc_data (LIGHTING_COST_CURRENT, LIGHTING_COST_POTENTIAL, HEATING_COST_CURRENT, HEATING_COST_POTENTIAL, HOT_WATER_COST_CURRENT, HOT_WATER_COST_POTENTIAL, ADDRESS, UPRN, CURRENT_ENERGY_RATING, TENURE) FROM '$EPC_CSV_PATH' DELIMITER ',' CSV HEADER;"
 
 # Join tables, filter rental properties and save to joined_tables.csv
@@ -73,7 +71,8 @@ SELECT
     temp_epc_data.CURRENT_ENERGY_RATING                
 FROM temp_addressbase
 JOIN temp_epc_data ON temp_addressbase.UKPRN = temp_epc_data.UPRN
-WHERE temp_epc_data.TENURE LIKE 'rent%';
+WHERE temp_epc_data.TENURE LIKE 'rent%'
+AND temp_epc_data.CURRENT_ENERGY_RATING IN ('F', 'G');
 "
 
 psql -U postgres -d "$DB_NAME" -c "\COPY joined_table TO './data/joined_table.csv' DELIMITER ',' CSV HEADER;"
