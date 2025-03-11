@@ -9,7 +9,7 @@ Uses the requests module to download the latest updates to Land Registry data.
 
 How to run locally:
 - `pip install requests`
-- `python download_land_registry.py`
+- `python download_land_registry_data.py`
 This will download a CSV file to the 'data' directory.
 
 **query_csvs.sh**
