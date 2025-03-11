@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# This script prepares the data for the Power BI visual.
+
 DB_NAME="exeter_epc_data"
 AB_CSV_PATH="./data/addressbase_sample.csv"
 EPC_CSV_PATH="./data/epc_data.csv"

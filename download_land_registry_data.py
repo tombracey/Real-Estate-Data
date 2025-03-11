@@ -1,4 +1,4 @@
-# Once the `requests` module is installed, running this file will download the last month of Land Registry data
+# Once the `requests` module is installed, running this script will download the last month of Land Registry data
 
 import requests
 
